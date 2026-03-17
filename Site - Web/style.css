@@ -1,0 +1,102 @@
+/* SETUP */
+
+:root{
+    --Text: white;
+    --Secondary: #D99CA3;
+    --Ternary: #E6CBC8;
+    --B: #E6CBC8;
+    background-image: url("IMG/abstract-textured-backgound.jpg");
+    background-size: cover;
+    background-color: rgb(26, 26, 26);
+}
+body {
+    margin: 0;
+    padding: 0;
+}
+
+
+/* bloc text style*/
+p{
+    color: var(--Text);
+}
+
+#main{
+    border-color: #ffffff;
+    border-width: 5px;
+    border-style: solid;
+
+    padding: 10px;
+
+    font-size: 20px;
+    margin: 100px 30px 30px 25px;
+}
+
+
+/* TOP */
+
+#bandeau {
+    background-color: rgb(204, 47, 47);
+    height: 10%;
+    width: 100%;
+}
+
+nav{
+    text-align:center;
+    padding: 1%;
+}
+
+
+h1{ 
+    color: var(--Text);  
+    margin: 0px;
+    font-size: 200%;
+    letter-spacing: 50px;
+}
+
+
+
+
+li 
+{
+    display: inline;
+    border-color: var(--Text);
+    color: black;
+
+
+    font-size: 40px;
+    padding: 5px;
+    margin: 5px 20px 30px 25px;
+}
+li a:hover{
+    font-size: 110%; 
+    color: rgb(204, 47, 47);
+}
+li :hover{
+    font-size: 110%; 
+    background-color: rgb(255, 255, 255);
+    padding: 1%;
+}
+a{ 
+    text-decoration: none; 
+    color: var(--Text);
+    margin: 10px;
+    transition-property: font-size;
+	transition-duration: 0.5s;	
+
+}
+
+/* FOOTER */
+
+
+footer{
+    border-color: #ffffff;
+    color: var(--Text);
+    border-width: 5px;
+    border-style: solid;
+
+    padding: 10px;
+
+    font-size: 20px;
+
+    margin: 200px 30px 30px 25px;
+}
