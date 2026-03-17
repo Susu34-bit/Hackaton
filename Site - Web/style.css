@@ -12,8 +12,24 @@
 body {
     margin: 0;
     padding: 0;
-}
 
+    min-height: 100vh; /* hauteur = écran */
+    display: flex;
+    flex-direction: column;
+}
+#logo{
+    width:20%;
+    margin: 0px 40% 0px 0px;
+    padding: 0; 
+}
+#ReconnaissanceVocalImg{
+      border-radius: 50%;
+}
+img{
+    width:20%;
+    margin: 0px 0% 0px 0px;
+    padding: 0;
+}
 
 /* bloc text style*/
 p{
@@ -21,14 +37,12 @@ p{
 }
 
 #main{
-    border-color: #ffffff;
-    border-width: 5px;
-    border-style: solid;
-
     padding: 10px;
 
     font-size: 20px;
     margin: 100px 30px 30px 25px;
+
+    flex: 1; /* prend tout l’espace restant */
 }
 
 
@@ -36,13 +50,13 @@ p{
 
 #bandeau {
     background-color: rgb(204, 47, 47);
-    height: 10%;
+    height: 7%;
     width: 100%;
 }
 
 nav{
     text-align:center;
-    padding: 1%;
+    padding: 0.25%;
 }
 
 
@@ -89,14 +103,20 @@ a{
 
 
 footer{
-    border-color: #ffffff;
-    color: var(--Text);
-    border-width: 5px;
-    border-style: solid;
+    height: 50%;
 
-    padding: 10px;
+    background-color: rgb(204, 47, 47);
+    text-align: center;
+    margin-bottom: 1%;
+}
 
-    font-size: 20px;
+.social-icons {
 
-    margin: 200px 30px 30px 25px;
+    display: flex;
+    justify-content: center; /* centre horizontalement */
+    gap: 15px;              /* espace entre logos */
+}
+
+.Logo{
+    width:10%;
 }
