@@ -14,3 +14,19 @@ Ces problématiques s'inscriront dans une thématique générale axée sur la "T
 
 L es étudiants auront 3 jours pour imaginer, réaliser et présenter des prototypes de solutions à
 vos sujets, sous formes de produits ou de services.
+
+
+## Contexte
+
+Projet réalisé lors du **Hackathon 2026 de l’IUT de Béziers**  
+Thématique : **Transition écologique & développement durable**
+
+
+## Solution
+
+**NOM DE L'APP** est une application web qui permet de :
+
+-     Voir les transports disponibles en temps réel  
+- 📍  Localiser bus, trains, taxis…  
+-     Identifier les transports accessibles PMR  
+-     Anticiper les déplacements  
