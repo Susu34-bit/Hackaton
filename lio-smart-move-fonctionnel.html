@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>liO Smart Move — Des trajets plus simples, plus verts, plus inclusifs</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --green: #1db37e;
+    --green-dark: #159b68;
+    --green-light: #e8f9f2;
+    --ink: #0d1f1a;
+    --ink-mid: #2e4a40;
+    --muted: #7a9a8e;
+    --border: #d4ede4;
+    --bg: #f7fbf9;
+    --white: #ffffff;
+    --accent: #f0a500;
+    --red-soft: #ff6b6b;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(13,31,26,0.08);
+    --shadow-lg: 0 12px 48px rgba(13,31,26,0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.6; }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; line-height: 1.15; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(247,251,249,0.92); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border); height: 64px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 40px;
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--ink); text-decoration: none; }
+  .nav-logo span { color: var(--green); }
+  .nav-links { display: flex; gap: 8px; list-style: none; }
+  .nav-links a { text-decoration: none; color: var(--ink-mid); font-size: 0.875rem; font-weight: 500; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; }
+  .nav-links a:hover, .nav-links a.active { background: var(--green-light); color: var(--green-dark); }
+  .nav-cta { background: var(--green) !important; color: var(--white) !important; }
+  .nav-cta:hover { background: var(--green-dark) !important; }
+
+  /* ===== PAGES ===== */
+  .page { display: none; padding-top: 64px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ===== BUTTONS ===== */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 12px; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.95rem; border: none; cursor: pointer; transition: all 0.22s; text-decoration: none; }
+  .btn-primary { background: var(--green); color: var(--white); box-shadow: 0 4px 20px rgba(29,179,126,0.35); }
+  .btn-primary:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(29,179,126,0.4); }
+  .btn-secondary { background: var(--white); color: var(--ink); border: 2px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--green); color: var(--green); }
+  .btn-ghost { background: transparent; color: var(--green); border: 2px solid var(--green); }
+  .btn-ghost:hover { background: var(--green); color: var(--white); }
+  .btn-sm { padding: 10px 20px; font-size: 0.85rem; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+  /* ===== HERO ===== */
+  .hero { min-height: calc(100vh - 64px); display: flex; align-items: center; padding: 80px 40px; background: linear-gradient(135deg, #f7fbf9 0%, #e8f9f2 50%, #f0faf5 100%); position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -100px; right: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(29,179,126,0.12) 0%, transparent 70%); border-radius: 50%; animation: pulse 6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+  .hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--green-light); color: var(--green-dark); border: 1px solid rgba(29,179,126,0.3); padding: 6px 14px; border-radius: 100px; font-size: 0.8rem; font-weight: 500; margin-bottom: 20px; }
+  .hero-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .hero h1 { font-size: 3.2rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.02em; }
+  .hero h1 span { color: var(--green); }
+  .hero-sub { font-size: 1.1rem; color: var(--ink-mid); margin-bottom: 36px; max-width: 460px; }
+  .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-visual { background: var(--white); border-radius: 24px; box-shadow: var(--shadow-lg); padding: 28px; border: 1px solid var(--border); }
+  .hero-visual-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 16px; font-weight: 500; }
+  .journey-preview { display: flex; flex-direction: column; gap: 0; }
+  .journey-step { display: flex; align-items: flex-start; gap: 16px; padding: 12px 0; border-left: 2px solid var(--border); margin-left: 16px; padding-left: 24px; position: relative; }
+  .journey-step::before { content: ''; position: absolute; left: -9px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: var(--white); border: 3px solid var(--green); }
+  .journey-step:first-child::before { background: var(--green); }
+  .journey-step:last-child { border-left-color: transparent; }
+  .journey-step:last-child::before { background: var(--ink); border-color: var(--ink); }
+  .step-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .step-bus { background: #e8f0ff; }
+  .step-walk { background: #fff4e0; }
+  .step-dest { background: var(--green-light); }
+  .step-info h4 { font-size: 0.875rem; font-weight: 600; margin-bottom: 2px; }
+  .step-info p { font-size: 0.78rem; color: var(--muted); }
+  .eco-badge { margin-top: 16px; padding: 12px 16px; background: var(--green-light); border-radius: 12px; display: flex; align-items: center; gap: 12px; }
+  .eco-badge .eco-icon { font-size: 1.5rem; }
+  .eco-badge p { font-size: 0.82rem; color: var(--green-dark); font-weight: 500; }
+  .eco-badge p span { font-weight: 700; }
+
+  /* ===== SECTIONS ===== */
+  .section { padding: 80px 40px; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-label { display: inline-block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--green); font-weight: 600; margin-bottom: 12px; }
+  .section-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; }
+  .section-sub { font-size: 1.05rem; color: var(--ink-mid); max-width: 540px; }
+
+  /* Promesses */
+  .promises { padding: 60px 40px; background: var(--white); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .promises-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1100px; margin: 0 auto; }
+  .promise-card { padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); transition: all 0.25s; }
+  .promise-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--green); }
+  .promise-icon { font-size: 2rem; margin-bottom: 16px; }
+  .promise-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+  .promise-card p { font-size: 0.9rem; color: var(--ink-mid); }
+
+  /* How-steps */
+  .how-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; margin-top: 48px; }
+  .how-step { text-align: center; position: relative; }
+  .how-step::after { content: '→'; position: absolute; right: -24px; top: 20px; font-size: 1.5rem; color: var(--green); opacity: 0.4; }
+  .how-step:last-child::after { display: none; }
+  .how-number { width: 52px; height: 52px; border-radius: 16px; background: var(--green); color: var(--white); font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(29,179,126,0.35); }
+  .how-step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+  .how-step p { font-size: 0.875rem; color: var(--ink-mid); }
+
+  /* ===== PAGE 2 — RECHERCHE ===== */
+  .search-page { padding: 40px; }
+  .search-inner { max-width: 760px; margin: 0 auto; }
+  .search-inner h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+  .search-inner > p { color: var(--muted); margin-bottom: 36px; }
+  .form-card { background: var(--white); border-radius: 20px; border: 1px solid var(--border); padding: 36px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .form-card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 20px; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'DM Sans', sans-serif; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+  .form-group label { font-size: 0.82rem; font-weight: 600; color: var(--ink-mid); }
+  .form-group input, .form-group select { padding: 12px 16px; border-radius: 10px; border: 1.5px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--green); }
+
+  /* Autocomplete */
+  .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--white); border: 1.5px solid var(--green); border-radius: 10px; box-shadow: var(--shadow-lg); z-index: 500; max-height: 220px; overflow-y: auto; margin-top: 4px; }
+  .autocomplete-item { padding: 10px 16px; font-size: 0.88rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.15s; display: flex; align-items: center; gap: 8px; }
+  .autocomplete-item:hover { background: var(--green-light); color: var(--green-dark); }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item .ac-icon { font-size: 1rem; }
+
+  /* Chips/profils */
+  .pref-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pref-chip { padding: 8px 16px; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); font-size: 0.84rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+  .pref-chip:hover { border-color: var(--green); color: var(--green); }
+  .pref-chip.selected { background: var(--green-light); border-color: var(--green); color: var(--green-dark); font-weight: 500; }
+  .profile-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .profile-card { padding: 16px; border-radius: 14px; border: 1.5px solid var(--border); cursor: pointer; text-align: center; transition: all 0.2s; background: var(--white); }
+  .profile-card:hover { border-color: var(--green); }
+  .profile-card.selected { background: var(--green-light); border-color: var(--green); }
+  .profile-card .profile-icon { font-size: 1.6rem; margin-bottom: 6px; }
+  .profile-card p { font-size: 0.82rem; font-weight: 600; }
+  .help-box { background: #fffbf0; border: 1px solid #ffe4a0; border-radius: 12px; padding: 16px 20px; display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; }
+  .help-box span { font-size: 1.2rem; }
+  .help-box p { font-size: 0.875rem; color: #8a6200; }
+
+  /* Loading */
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(247,251,249,0.92); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  .loading-overlay.active { display: flex; }
+  .loading-spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--green-dark); font-size: 1rem; }
+
+  /* ===== PAGE 3 — RÉSULTATS ===== */
+  .results-page { padding: 40px; }
+  .results-inner { max-width: 1100px; margin: 0 auto; }
+  .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .results-header h1 { font-size: 1.8rem; font-weight: 800; }
+  .results-route { font-size: 0.95rem; color: var(--muted); margin-top: 4px; }
+  .results-grid { display: grid; grid-template-columns: 1fr 380px; gap: 28px; }
+  .main-result { background: var(--white); border-radius: 20px; border: 1px solid var(--border); padding: 32px; box-shadow: var(--shadow); }
+  .result-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green); color: white; border-radius: 8px; padding: 4px 12px; font-size: 0.78rem; font-weight: 600; margin-bottom: 20px; }
+  .result-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .stat-block { text-align: center; }
+  .stat-block .stat-val { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--ink); }
+  .stat-block .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-item { display: flex; gap: 20px; padding-bottom: 20px; position: relative; }
+  .tl-left { display: flex; flex-direction: column; align-items: center; width: 40px; flex-shrink: 0; }
+  .tl-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 3px solid var(--white); box-shadow: 0 0 0 2px var(--green); flex-shrink: 0; margin-top: 4px; }
+  .tl-dot.walk { background: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .tl-dot.end { background: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+  .tl-line { flex: 1; width: 2px; background: var(--border); margin-top: 4px; }
+  .tl-item:last-child .tl-line { display: none; }
+  .tl-content h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+  .tl-content p { font-size: 0.8rem; color: var(--muted); }
+  .tl-time { font-size: 0.78rem; font-weight: 600; color: var(--green); background: var(--green-light); padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+
+  .sidebar-results { display: flex; flex-direction: column; gap: 20px; }
+  .why-box { background: var(--green-light); border-radius: 16px; padding: 20px; border: 1px solid rgba(29,179,126,0.2); }
+  .why-box h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--green-dark); }
+  .why-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 0.85rem; color: var(--green-dark); }
+  .why-item::before { content: '✓'; font-weight: 700; color: var(--green); flex-shrink: 0; }
+
+  .eco-box { background: var(--white); border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
+  .eco-box h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 14px; }
+  .eco-compare { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .eco-col { text-align: center; flex: 1; }
+  .eco-col .eco-val { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
+  .eco-col .eco-val.green { color: var(--green); }
+  .eco-col .eco-val.red { color: var(--red-soft); }
+  .eco-col p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .eco-divider { color: var(--muted); font-size: 1.2rem; }
+  .eco-saved { margin-top: 12px; background: var(--green-light); border-radius: 10px; padding: 10px; text-align: center; font-size: 0.82rem; color: var(--green-dark); font-weight: 500; }
+
+  .alt-title { font-size: 0.85rem; font-weight: 700; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .alt-cards { display: flex; flex-direction: column; gap: 10px; }
+  .alt-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; }
+  .alt-card:hover { border-color: var(--green); }
+  .alt-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .alt-card-header h4 { font-size: 0.88rem; font-weight: 700; }
+  .alt-tag { font-size: 0.72rem; padding: 3px 10px; border-radius: 100px; font-weight: 600; }
+  .tag-fast { background: #fff0f0; color: #c0392b; }
+  .tag-eco { background: var(--green-light); color: var(--green-dark); }
+  .tag-acc { background: #f0f4ff; color: #2c5ae9; }
+  .alt-stats { display: flex; gap: 12px; font-size: 0.78rem; color: var(--muted); }
+  .result-actions { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+
+  /* No-result */
+  .no-result { text-align: center; padding: 60px 20px; }
+  .no-result .no-icon { font-size: 3rem; margin-bottom: 16px; }
+  .no-result h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+  .no-result p { color: var(--muted); }
+
+  /* Navitia badge */
+  .navitia-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; color: #2c5ae9; border-radius: 8px; padding: 4px 10px; font-size: 0.72rem; font-weight: 600; margin-left: 8px; }
+
+  /* ===== PAGE 4 — CARTE ===== */
+  .map-page { padding: 40px; }
+  .map-inner { max-width: 1100px; margin: 0 auto; }
+  .map-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; margin-top: 24px; }
+  .map-sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .map-panel { background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 20px; }
+  .map-panel h3 { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 14px; }
+  .map-info-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .map-info-item:last-child { border-bottom: none; }
+  .map-info-item .map-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  #leaflet-map { width: 100%; height: 520px; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .filter-check { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.84rem; cursor: pointer; }
+  .filter-check input { accent-color: var(--green); }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--ink-mid); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+  /* ===== PAGE 5 — ACCESSIBILITÉ ===== */
+  .access-page { padding: 40px; }
+  .access-inner { max-width: 1000px; margin: 0 auto; }
+  .access-controls { background: var(--white); border-radius: 20px; border: 1px solid var(--border); padding: 32px; margin-bottom: 28px; }
+  .toggle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 20px; }
+  .toggle-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--bg); border-radius: 12px; border: 1.5px solid var(--border); }
+  .toggle-item .toggle-label { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 500; }
+  .toggle-switch { width: 44px; height: 24px; background: var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: background 0.25s; }
+  .toggle-switch.on { background: var(--green); }
+  .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: left 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle-switch.on::after { left: 23px; }
+  .profiles-section { margin-bottom: 28px; }
+  .profiles-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; margin-top: 20px; }
+  .profile-detail-card { background: var(--white); border-radius: 16px; border: 1.5px solid var(--border); padding: 24px; transition: all 0.25s; }
+  .profile-detail-card:hover { border-color: var(--green); box-shadow: var(--shadow); }
+  .profile-detail-card .pd-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .profile-detail-card .pd-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--green-light); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  .profile-detail-card .pd-title { font-weight: 700; font-size: 1rem; }
+  .profile-detail-card .pd-sub { font-size: 0.8rem; color: var(--muted); }
+  .profile-features { list-style: none; }
+  .profile-features li { padding: 6px 0; font-size: 0.85rem; color: var(--ink-mid); display: flex; align-items: center; gap: 8px; }
+  .profile-features li::before { content: '•'; color: var(--green); font-weight: 800; font-size: 1rem; }
+  .before-after { background: var(--white); border-radius: 20px; border: 1px solid var(--border); padding: 32px; margin-bottom: 28px; }
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
+  .ba-col { border-radius: 14px; overflow: hidden; border: 1.5px solid var(--border); }
+  .ba-header { padding: 12px 16px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+  .ba-header.standard { background: #f0f0f0; color: #555; }
+  .ba-header.simplified { background: var(--green-light); color: var(--green-dark); }
+  .ba-content { padding: 16px; }
+  .ba-standard { font-size: 0.8rem; color: var(--ink-mid); }
+  .ba-simplified { font-size: 1.1rem; color: var(--ink); }
+  .ba-simplified .ba-big { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--green); display: block; }
+
+  /* ===== PAGE 6 — À PROPOS ===== */
+  .about-page { padding: 40px; }
+  .about-inner { max-width: 900px; margin: 0 auto; }
+  .about-hero { text-align: center; padding: 60px 0 40px; }
+  .about-hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 16px; }
+  .about-hero p { font-size: 1.1rem; color: var(--ink-mid); max-width: 560px; margin: 0 auto 36px; }
+  .about-section { margin-bottom: 48px; }
+  .about-section h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--green-light); }
+  .values-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+  .value-card { padding: 20px; background: var(--white); border-radius: 14px; border: 1px solid var(--border); display: flex; gap: 14px; align-items: flex-start; }
+  .value-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .value-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+  .value-card p { font-size: 0.84rem; color: var(--ink-mid); }
+  .tech-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .tech-pill { padding: 8px 18px; background: var(--white); border: 1.5px solid var(--border); border-radius: 100px; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .team-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 20px; }
+  .team-card { text-align: center; padding: 20px 12px; background: var(--white); border-radius: 16px; border: 1px solid var(--border); }
+  .team-avatar { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 10px; background: linear-gradient(135deg, var(--green), var(--ink)); display: flex; align-items: center; justify-content: center; color: white; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; }
+  .team-card h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 4px; }
+  .team-card p { font-size: 0.75rem; color: var(--muted); }
+
+  /* ===== API KEY BANNER ===== */
+  .api-banner { background: #fffbf0; border: 1.5px solid var(--accent); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; }
+  .api-banner-icon { font-size: 1.4rem; flex-shrink: 0; }
+  .api-banner-content h3 { font-size: 0.95rem; font-weight: 700; color: #8a6200; margin-bottom: 6px; }
+  .api-banner-content p { font-size: 0.84rem; color: #7a5500; margin-bottom: 10px; }
+  .api-key-row { display: flex; gap: 8px; align-items: center; }
+  .api-key-row input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--accent); font-size: 0.85rem; font-family: monospace; background: var(--white); }
+  .api-key-row input:focus { outline: none; border-color: var(--green); }
+  .btn-xs { padding: 8px 16px; font-size: 0.8rem; border-radius: 8px; }
+
+  /* ===== FOOTER ===== */
+  footer { background: var(--ink); color: rgba(255,255,255,0.7); padding: 40px; margin-top: 60px; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--white); }
+  .footer-logo span { color: var(--green); }
+  .footer-info { font-size: 0.82rem; text-align: center; }
+  .footer-info a { color: var(--green); text-decoration: none; }
+
+  .divider { height: 1px; background: var(--border); margin: 0 40px; }
+
+  /* Accessibilité — texte agrandi */
+  body.large-text { font-size: 19px; }
+  body.large-text .form-group input, body.large-text .form-group select { font-size: 1.05rem; }
+  body.high-contrast { filter: contrast(1.4); }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero { padding: 40px 20px; }
+    .hero h1 { font-size: 2.2rem; }
+    .promises-grid, .how-steps, .results-grid, .map-layout { grid-template-columns: 1fr; }
+    .section { padding: 48px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Recherche des itinéraires en cours…</div>
+</div>
+
+<!-- NAVIGATION -->
+<nav>
+  <a class="nav-logo" href="#" onclick="showPage('home')">li<span>O</span> Smart Move</a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home')" id="nav-home" class="active">Accueil</a></li>
+    <li><a href="#" onclick="showPage('search')" id="nav-search">Rechercher</a></li>
+    <li><a href="#" onclick="showPage('map')" id="nav-map">Carte</a></li>
+    <li><a href="#" onclick="showPage('access')" id="nav-access">Accessibilité</a></li>
+    <li><a href="#" onclick="showPage('about')" id="nav-about">À propos</a></li>
+    <li><a href="#" onclick="showPage('search')" class="nav-cta">Planifier mon trajet</a></li>
+  </ul>
+</nav>
+
+<!-- ===== PAGE 1 — ACCUEIL ===== -->
+<div id="page-home" class="page active">
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-badge"><span class="dot"></span> Mobilité intelligente · Hérault</div>
+        <h1>Planifiez vos<br>trajets <span>autrement</span></h1>
+        <p class="hero-sub">Combinez bus, marche et vélo avec une information claire, accessible et plus durable — données en temps réel liO Occitanie.</p>
+        <div class="hero-btns">
+          <button class="btn btn-primary" onclick="showPage('search')">🗺️ Planifier mon trajet</button>
+          <button class="btn btn-secondary" onclick="showPage('access')">♿ Mode accessible</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <p class="hero-visual-title">Exemple de trajet recommandé</p>
+        <div class="journey-preview">
+          <div class="journey-step">
+            <div class="step-icon step-bus">🚌</div>
+            <div class="step-info"><h4>Gare de Béziers</h4><p>Départ · 08h14</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="step-icon step-bus">🚌</div>
+            <div class="step-info"><h4>Bus Ligne 3 — Direction Centre</h4><p>Durée : 14 min · 1 correspondance</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="step-icon step-walk">🚶</div>
+            <div class="step-info"><h4>Arrêt Foch → IUT</h4><p>Marche : 6 min</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="step-icon step-dest">📍</div>
+            <div class="step-info"><h4>IUT de Béziers</h4><p>Arrivée · 08h38 · 24 min au total</p></div>
+          </div>
+        </div>
+        <div class="eco-badge">
+          <span class="eco-icon">🌿</span>
+          <p>Vous évitez <span>2,4 kg CO₂</span> par rapport à un trajet voiture.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="divider"></div>
+  <section class="promises">
+    <div class="promises-grid">
+      <div class="promise-card"><div class="promise-icon">⚡</div><h3>Simple</h3><p>Des trajets compréhensibles en un coup d'œil, sans jargon ni surcharge d'information.</p></div>
+      <div class="promise-card"><div class="promise-icon">♿</div><h3>Inclusif</h3><p>Une interface pensée pour tous : PMR, seniors, touristes, personnes pressées.</p></div>
+      <div class="promise-card"><div class="promise-icon">🌿</div><h3>Écologique</h3><p>Des déplacements plus responsables avec un score carbone comparé à la voiture.</p></div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-inner">
+      <span class="section-label">Comment ça marche</span>
+      <h2 class="section-title">3 étapes pour votre trajet idéal</h2>
+      <div class="how-steps">
+        <div class="how-step"><div class="how-number">1</div><h3>Entrez départ & arrivée</h3><p>Tapez votre point de départ et votre destination — l'autocomplete suggère les arrêts liO.</p></div>
+        <div class="how-step"><div class="how-number">2</div><h3>Choisissez vos préférences</h3><p>Profil voyageur, critères de trajet, accessibilité — vous personnalisez tout.</p></div>
+        <div class="how-step"><div class="how-number">3</div><h3>Découvrez votre trajet</h3><p>Un itinéraire adapté via Navitia, une carte Leaflet interactive, un score écologique.</p></div>
+      </div>
+    </div>
+  </section>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">li<span>O</span> Smart Move</div>
+      <div class="footer-info">Hackathon liO 2026 · Dataset liO Occitanie · <a href="#" onclick="showPage('about')">À propos du projet</a></div>
+      <div style="font-size:0.82rem">Des trajets plus simples, plus verts, plus inclusifs</div>
+    </div>
+  </footer>
+</div>
+
+<!-- ===== PAGE 2 — RECHERCHE ===== -->
+<div id="page-search" class="page">
+  <div class="search-page">
+    <div class="search-inner">
+      <h1>Rechercher un trajet</h1>
+      <p>Entrez votre itinéraire et vos préférences. Les données proviennent de l'API Navitia (réseau liO Occitanie).</p>
+
+      <!-- Clé API Navitia -->
+      <div class="api-banner" id="apiBanner">
+        <div class="api-banner-icon">🔑</div>
+        <div class="api-banner-content">
+          <h3>Clé API Navitia requise</h3>
+          <p>Pour accéder aux données réelles du réseau liO Occitanie, inscrivez-vous gratuitement sur <strong>navitia.io</strong> et collez votre clé ci-dessous.</p>
+          <div class="api-key-row">
+            <input type="text" id="navitiaKey" placeholder="Votre clé Navitia (ex: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)" />
+            <button class="btn btn-primary btn-xs" onclick="saveApiKey()">✅ Enregistrer</button>
+            <button class="btn btn-secondary btn-xs" onclick="useDemoMode()">🎭 Mode démo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h2>Votre itinéraire</h2>
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-group">
+            <label>📍 Départ</label>
+            <input type="text" id="inputFrom" placeholder="Ex : Gare de Béziers" autocomplete="off" oninput="autocomplete(this, 'from')">
+            <div class="autocomplete-list" id="ac-from" style="display:none"></div>
+          </div>
+          <div class="form-group">
+            <label>🏁 Arrivée</label>
+            <input type="text" id="inputTo" placeholder="Ex : IUT de Béziers" autocomplete="off" oninput="autocomplete(this, 'to')">
+            <div class="autocomplete-list" id="ac-to" style="display:none"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>📅 Date</label>
+            <input type="date" id="inputDate">
+          </div>
+          <div class="form-group">
+            <label>🕐 Heure de départ</label>
+            <input type="time" id="inputTime" value="08:00">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h2>Mes préférences de trajet</h2>
+        <div class="pref-grid" id="prefs">
+          <div class="pref-chip selected" onclick="toggleChip(this)" data-pref="rapide">⚡ Trajet le plus rapide</div>
+          <div class="pref-chip" onclick="toggleChip(this)" data-pref="marche">🚶 Moins de marche</div>
+          <div class="pref-chip" onclick="toggleChip(this)" data-pref="correspondances">🔄 Moins de correspondances</div>
+          <div class="pref-chip" onclick="toggleChip(this)" data-pref="eco">🌿 Trajet le plus écologique</div>
+          <div class="pref-chip" onclick="toggleChip(this)" data-pref="pmr">♿ Accessible PMR</div>
+          <div class="pref-chip" onclick="toggleChip(this)" data-pref="simple">📖 Version simple à lire</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h2>Mon profil voyageur</h2>
+        <div class="profile-grid" id="profiles">
+          <div class="profile-card selected" onclick="selectProfile(this)" data-profile="standard"><div class="profile-icon">🧳</div><p>Voyageur standard</p></div>
+          <div class="profile-card" onclick="selectProfile(this)" data-profile="etudiant"><div class="profile-icon">🎓</div><p>Étudiant</p></div>
+          <div class="profile-card" onclick="selectProfile(this)" data-profile="pmr"><div class="profile-icon">♿</div><p>PMR</p></div>
+          <div class="profile-card" onclick="selectProfile(this)" data-profile="senior"><div class="profile-icon">👴</div><p>Senior</p></div>
+          <div class="profile-card" onclick="selectProfile(this)" data-profile="touriste"><div class="profile-icon">🗺️</div><p>Touriste</p></div>
+          <div class="profile-card" onclick="selectProfile(this)" data-profile="eco"><div class="profile-icon">🌱</div><p>Éco-responsable</p></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="searchBtn" style="width:100%;justify-content:center;padding:18px;" onclick="lancerRecherche()">
+        🔍 Lancer la recherche
+      </button>
+
+      <div class="help-box">
+        <span>💡</span>
+        <p><strong>Vous ne savez pas quel choix faire ?</strong> Sélectionnez <em>"Trajet le plus rapide"</em> — liO Smart Move s'occupe du reste. En mode démo, des données simulées réalistes sont utilisées.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 3 — RÉSULTATS ===== -->
+<div id="page-results" class="page">
+  <div class="results-page">
+    <div class="results-inner">
+      <div class="results-header">
+        <div>
+          <h1>Votre itinéraire <span class="navitia-badge" id="dataBadge">📡 Navitia</span></h1>
+          <p class="results-route" id="resultsRoute">—</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="showPage('search')">← Modifier</button>
+      </div>
+      <div id="resultsContent">
+        <!-- Contenu dynamique injecté ici -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 4 — CARTE ===== -->
+<div id="page-map" class="page">
+  <div class="map-page">
+    <div class="map-inner">
+      <h1 style="font-size:2rem;font-weight:800;margin-bottom:4px">Carte interactive</h1>
+      <p style="color:var(--muted);margin-bottom:0" id="mapSubtitle">Visualisez votre trajet sur la carte OpenStreetMap</p>
+      <div class="map-layout">
+        <div class="map-sidebar">
+          <div class="map-panel">
+            <h3>Trajet</h3>
+            <div id="mapTrajetInfo">
+              <div class="map-info-item"><div class="map-dot" style="background:var(--green)"></div> <em>Lancez une recherche</em></div>
+            </div>
+          </div>
+          <div class="map-panel">
+            <h3>Filtres</h3>
+            <label class="filter-check"><input type="checkbox" id="filterArrets" checked onchange="applyMapFilters()"> Arrêts de bus</label>
+            <label class="filter-check"><input type="checkbox" id="filterLignes" checked onchange="applyMapFilters()"> Lignes</label>
+            <label class="filter-check"><input type="checkbox" id="filterMarche" checked onchange="applyMapFilters()"> Marche à pied</label>
+          </div>
+          <div class="map-panel">
+            <h3>Légende</h3>
+            <div class="map-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Départ/Arrivée</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#5b8fff"></div> Bus</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Marche</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="showPage('results')" style="width:100%;justify-content:center">← Retour aux résultats</button>
+        </div>
+        <div id="leaflet-map"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 5 — ACCESSIBILITÉ ===== -->
+<div id="page-access" class="page">
+  <div class="access-page">
+    <div class="access-inner">
+      <span class="section-label">Accessibilité</span>
+      <h1 style="font-size:2.2rem;font-weight:800;margin-bottom:8px">Une mobilité pensée pour tous</h1>
+      <p style="color:var(--ink-mid);margin-bottom:36px;font-size:1.05rem">Adaptez l'interface selon vos besoins pour une expérience optimale.</p>
+      <div class="access-controls">
+        <h2 style="font-size:1rem;font-weight:700;margin-bottom:4px">Options d'accessibilité</h2>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:20px">Activez les options qui vous correspondent.</p>
+        <div class="toggle-grid">
+          <div class="toggle-item"><div class="toggle-label">🔤 Texte agrandi</div><div class="toggle-switch" id="toggleLargeText" onclick="toggleAccess('largeText', this)"></div></div>
+          <div class="toggle-item"><div class="toggle-label">🌓 Contraste élevé</div><div class="toggle-switch" id="toggleContrast" onclick="toggleAccess('contrast', this)"></div></div>
+          <div class="toggle-item"><div class="toggle-label">📖 Mode simplifié</div><div class="toggle-switch on" id="toggleSimple" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-item"><div class="toggle-label">🔊 Lecture vocale</div><div class="toggle-switch" id="toggleVoice" onclick="toggleVoice(this)"></div></div>
+          <div class="toggle-item"><div class="toggle-label">🌍 Langue FR / EN</div><div class="toggle-switch" id="toggleLang" onclick="toggleLang(this)"></div></div>
+          <div class="toggle-item"><div class="toggle-label">🖼️ Pictogrammes</div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+      </div>
+      <div class="profiles-section">
+        <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:4px">Profils adaptés</h2>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:0">Chaque profil ajuste automatiquement l'interface et les résultats.</p>
+        <div class="profiles-grid">
+          <div class="profile-detail-card"><div class="pd-header"><div class="pd-icon">♿</div><div><div class="pd-title">PMR</div><div class="pd-sub">Personne à mobilité réduite</div></div></div><ul class="profile-features"><li>Moins de marche à pied</li><li>Trajets avec arrêts adaptés</li><li>Interface simplifiée activée</li><li>Boutons de grande taille</li></ul></div>
+          <div class="profile-detail-card"><div class="pd-header"><div class="pd-icon">👴</div><div><div class="pd-title">Senior</div><div class="pd-sub">Interface claire et lisible</div></div></div><ul class="profile-features"><li>Texte agrandi automatiquement</li><li>Grands boutons d'action</li><li>Étapes très lisibles</li><li>Pictogrammes renforcés</li></ul></div>
+          <div class="profile-detail-card"><div class="pd-header"><div class="pd-icon">🗺️</div><div><div class="pd-title">Touriste</div><div class="pd-sub">Version bilingue FR/EN</div></div></div><ul class="profile-features"><li>Interface bilingue français/anglais</li><li>Repères visuels renforcés</li><li>Instructions simplifiées</li><li>Carte mise en avant</li></ul></div>
+          <div class="profile-detail-card"><div class="pd-header"><div class="pd-icon">⚡</div><div><div class="pd-title">Usager pressé</div><div class="pd-sub">Vue rapide et directe</div></div></div><ul class="profile-features"><li>Trajet direct en premier</li><li>Peu de texte affiché</li><li>Vue condensée du trajet</li><li>1 bouton — 1 action</li></ul></div>
+        </div>
+      </div>
+      <div class="before-after">
+        <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:4px">Avant / Après — Mode simplifié</h2>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:0">Visualisez la différence entre l'affichage standard et simplifié.</p>
+        <div class="ba-grid">
+          <div class="ba-col"><div class="ba-header standard">Interface standard</div><div class="ba-content"><div class="ba-standard"><p style="margin-bottom:8px"><strong>Itinéraire #A-GBZ-IUT-0317</strong></p><p>Départ 08:14 · Quai 2 · Ligne 3 dir. Plateau des Poètes · Correspondance Foch (08:28) · Ligne 7 · Arrivée 08:38 · Durée 24 min · 1 correspondance · 6 min marche · 0,48 kg CO₂</p></div></div></div>
+          <div class="ba-col"><div class="ba-header simplified">Mode simplifié ✓</div><div class="ba-content"><div class="ba-simplified"><span class="ba-big">24 min</span>🚌 Bus Ligne 3<br>🔄 1 changement à Foch<br>🚶 6 min à pied<br>📍 Arrivée à 08:38</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 6 — À PROPOS ===== -->
+<div id="page-about" class="page">
+  <div class="about-page">
+    <div class="about-inner">
+      <div class="about-hero">
+        <span class="section-label">Hackathon liO 2026</span>
+        <h1>À propos du projet</h1>
+        <p>liO Smart Move est né d'une conviction : l'information voyageur doit être accessible à tous et encourager une mobilité plus durable.</p>
+        <button class="btn btn-primary" onclick="showPage('search')">Essayer le service</button>
+      </div>
+      <div class="about-section">
+        <h2>Le problème identifié</h2>
+        <p style="color:var(--ink-mid);font-size:0.95rem;line-height:1.8">La voiture reste le mode de transport dominant dans l'Hérault, souvent par manque d'alternatives perçues comme simples et accessibles. Les systèmes d'information voyageur existants sont parfois complexes, peu inclusifs, et ne prennent pas assez en compte les besoins diversifiés des usagers — personnes âgées, PMR, touristes, personnes pressées.</p>
+      </div>
+      <div class="about-section">
+        <h2>Notre solution</h2>
+        <div class="values-grid">
+          <div class="value-card"><div class="value-icon">🔍</div><div><h3>Recherche multimodale</h3><p>Bus, marche et vélo combinés intelligemment via l'API Navitia (données GTFS liO).</p></div></div>
+          <div class="value-card"><div class="value-icon">♿</div><div><h3>Accessibilité universelle</h3><p>Profils adaptés, interface personnalisable, pictogrammes et lecture vocale.</p></div></div>
+          <div class="value-card"><div class="value-icon">🌿</div><div><h3>Mobilité durable</h3><p>Score carbone calculé sur la distance réelle, comparatif voiture.</p></div></div>
+          <div class="value-card"><div class="value-icon">🗺️</div><div><h3>Carte interactive</h3><p>Visualisation Leaflet.js + OpenStreetMap avec le trajet réel affiché.</p></div></div>
+        </div>
+      </div>
+      <div class="about-section">
+        <h2>Technologies utilisées</h2>
+        <div class="tech-pills">
+          <div class="tech-pill">🌐 HTML5</div>
+          <div class="tech-pill">🎨 CSS3</div>
+          <div class="tech-pill">⚡ JavaScript</div>
+          <div class="tech-pill">🗺️ Leaflet.js + OSM</div>
+          <div class="tech-pill">📡 API Navitia</div>
+          <div class="tech-pill">📊 Données liO Occitanie</div>
+          <div class="tech-pill">🔓 Open Data GTFS</div>
+        </div>
+      </div>
+      <div class="about-section">
+        <h2>L'équipe</h2>
+        <div class="team-grid">
+          <div class="team-card"><div class="team-avatar">AL</div><h4>Alex L.</h4><p>Chef de projet</p></div>
+          <div class="team-card"><div class="team-avatar">MR</div><h4>Marie R.</h4><p>Design UI/UX</p></div>
+          <div class="team-card"><div class="team-avatar">TB</div><h4>Thomas B.</h4><p>Développement</p></div>
+          <div class="team-card"><div class="team-avatar">SC</div><h4>Sofia C.</h4><p>Data & API</p></div>
+          <div class="team-card"><div class="team-avatar">LM</div><h4>Lucas M.</h4><p>Accessibilité</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">li<span>O</span> Smart Move</div>
+      <div class="footer-info">Hackathon liO 2026 · Dataset liO Occitanie · <a href="#" onclick="showPage('about')">À propos</a></div>
+      <div style="font-size:0.82rem">Des trajets plus simples, plus verts, plus inclusifs</div>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* =====================================================
+   STATE GLOBAL
+   ===================================================== */
+const state = {
+  apiKey: localStorage.getItem('navitiaKey') || '',
+  demoMode: localStorage.getItem('demoMode') === 'true',
+  fromLabel: '', toLabel: '',
+  fromCoords: null, toCoords: null,
+  currentJourneys: [],
+  selectedProfile: 'standard',
+  map: null,
+  mapLayers: { bus: [], walk: [], markers: [] }
+};
+
+// Arrêts liO Occitanie — base locale (pour autocomplete sans API)
+const ARRETS_LIO = [
+  { id: 'stop_area:OCE:SA:87611228', name: 'Gare de Béziers', lat: 43.3428, lon: 3.2175, icon: '🚉' },
+  { id: 'stop_area:OCE:SA:87611525', name: 'Gare de Montpellier Saint-Roch', lat: 43.6047, lon: 3.8797, icon: '🚉' },
+  { id: 'stop_area:OCE:SA:87611533', name: 'Gare de Sète', lat: 43.4051, lon: 3.6965, icon: '🚉' },
+  { id: 'stop_area:OCE:SA:87611509', name: 'Gare de Nîmes', lat: 43.8376, lon: 4.3601, icon: '🚉' },
+  { id: 'addr:43.348:3.218', name: 'IUT de Béziers', lat: 43.3480, lon: 3.2180, icon: '🏫' },
+  { id: 'addr:43.345:3.215', name: 'Arrêt Foch — Béziers', lat: 43.3450, lon: 3.2150, icon: '🚌' },
+  { id: 'addr:43.343:3.213', name: 'Arrêt Gare SNCF — Béziers', lat: 43.3428, lon: 3.2135, icon: '🚌' },
+  { id: 'addr:43.607:3.875', name: 'Place de la Comédie — Montpellier', lat: 43.6072, lon: 3.8756, icon: '📍' },
+  { id: 'addr:43.611:3.876', name: 'Faculté de Droit — Montpellier', lat: 43.6110, lon: 3.8760, icon: '🏛️' },
+  { id: 'addr:43.608:3.879', name: 'Hôpital Lapeyronie — Montpellier', lat: 43.6082, lon: 3.8793, icon: '🏥' },
+  { id: 'addr:43.610:3.877', name: 'Université Paul Valéry — Montpellier', lat: 43.6100, lon: 3.8770, icon: '🎓' },
+  { id: 'addr:43.344:3.220', name: 'Mairie de Béziers', lat: 43.3440, lon: 3.2200, icon: '🏛️' },
+  { id: 'addr:43.346:3.219', name: 'Centre Hospitalier de Béziers', lat: 43.3460, lon: 3.2190, icon: '🏥' },
+  { id: 'addr:43.340:3.214', name: 'Les Halles de Béziers', lat: 43.3400, lon: 3.2140, icon: '🛒' },
+  { id: 'addr:43.837:4.362', name: 'Arènes de Nîmes', lat: 43.8370, lon: 4.3620, icon: '🏟️' },
+  { id: 'addr:43.406:3.700', name: 'Centre-ville de Sète', lat: 43.4060, lon: 3.7000, icon: '🌊' },
+];
+
+// Données CO2 (g/km)
+const CO2 = { bus: 89, voiture: 193, velo: 0, marche: 0, train: 14 };
+
+/* =====================================================
+   NAVIGATION
+   ===================================================== */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const navMap = { home:'nav-home', search:'nav-search', results:'nav-search', map:'nav-map', access:'nav-access', about:'nav-about' };
+  const navEl = document.getElementById(navMap[id]);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'map') initMap();
+}
+
+/* =====================================================
+   API KEY & DEMO MODE
+   ===================================================== */
+function saveApiKey() {
+  const key = document.getElementById('navitiaKey').value.trim();
+  if (!key) return alert('Veuillez entrer une clé Navitia valide.');
+  state.apiKey = key;
+  state.demoMode = false;
+  localStorage.setItem('navitiaKey', key);
+  localStorage.setItem('demoMode', 'false');
+  document.getElementById('apiBanner').style.display = 'none';
+  document.getElementById('dataBadge').textContent = '📡 Navitia Live';
+  showNotification('✅ Clé API enregistrée ! Les données réelles liO seront utilisées.');
+}
+
+function useDemoMode() {
+  state.demoMode = true;
+  localStorage.setItem('demoMode', 'true');
+  document.getElementById('apiBanner').style.display = 'none';
+  document.getElementById('dataBadge').textContent = '🎭 Mode démo';
+  showNotification('🎭 Mode démo activé — données simulées réalistes.');
+}
+
+function showNotification(msg) {
+  const n = document.createElement('div');
+  n.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--ink);color:white;padding:14px 20px;border-radius:12px;font-size:0.88rem;font-weight:500;z-index:9999;box-shadow:var(--shadow-lg);max-width:340px;';
+  n.textContent = msg;
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 4000);
+}
+
+/* =====================================================
+   INIT DATE
+   ===================================================== */
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  const el = document.getElementById('inputDate');
+  if (el) el.value = today;
+
+  // Restore API key
+  if (state.apiKey) {
+    document.getElementById('apiBanner').style.display = 'none';
+    document.getElementById('dataBadge').textContent = '📡 Navitia Live';
+  } else if (state.demoMode) {
+    document.getElementById('apiBanner').style.display = 'none';
+    document.getElementById('dataBadge').textContent = '🎭 Mode démo';
+  }
+});
+
+/* =====================================================
+   AUTOCOMPLETE
+   ===================================================== */
+function autocomplete(input, side) {
+  const q = input.value.toLowerCase().trim();
+  const listId = 'ac-' + side;
+  const list = document.getElementById(listId);
+
+  if (q.length < 2) { list.style.display = 'none'; return; }
+
+  // Filtre local
+  let results = ARRETS_LIO.filter(a => a.name.toLowerCase().includes(q)).slice(0, 6);
+
+  if (results.length === 0) { list.style.display = 'none'; return; }
+
+  list.innerHTML = results.map(r =>
+    `<div class="autocomplete-item" onclick="selectStop('${side}','${r.name}','${r.lat}','${r.lon}')">
+      <span class="ac-icon">${r.icon}</span> ${r.name}
+    </div>`
+  ).join('');
+  list.style.display = 'block';
+
+  // Si clé Navitia dispo, enrichir avec l'API
+  if (state.apiKey && q.length >= 3) {
+    fetchNavitiaPlaces(q, side, list);
+  }
+}
+
+async function fetchNavitiaPlaces(q, side, listEl) {
+  try {
+    const url = `https://api.navitia.io/v1/coverage/fr-se/places?q=${encodeURIComponent(q)}&count=6`;
+    const r = await fetch(url, { headers: { Authorization: state.apiKey } });
+    if (!r.ok) return;
+    const data = await r.json();
+    const places = (data.places || []).slice(0, 6);
+    if (!places.length) return;
+
+    listEl.innerHTML = places.map(p => {
+      const coord = p.stop_area?.coord || p.address?.coord || p.administrative_region?.coord || { lat: 0, lon: 0 };
+      const icon = p.embedded_type === 'stop_area' ? '🚌' : p.embedded_type === 'address' ? '📍' : '🏛️';
+      return `<div class="autocomplete-item" onclick="selectStop('${side}','${p.name}','${coord.lat}','${coord.lon}')">
+        <span class="ac-icon">${icon}</span> ${p.name}
+      </div>`;
+    }).join('');
+    listEl.style.display = 'block';
+  } catch(e) {}
+}
+
+function selectStop(side, name, lat, lon) {
+  if (side === 'from') {
+    document.getElementById('inputFrom').value = name;
+    state.fromLabel = name;
+    state.fromCoords = { lat: parseFloat(lat), lon: parseFloat(lon) };
+    document.getElementById('ac-from').style.display = 'none';
+  } else {
+    document.getElementById('inputTo').value = name;
+    state.toLabel = name;
+    state.toCoords = { lat: parseFloat(lat), lon: parseFloat(lon) };
+    document.getElementById('ac-to').style.display = 'none';
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.form-group')) {
+    document.getElementById('ac-from').style.display = 'none';
+    document.getElementById('ac-to').style.display = 'none';
+  }
+});
+
+/* =====================================================
+   CHIPS & PROFIL
+   ===================================================== */
+function toggleChip(el) { el.classList.toggle('selected'); }
+
+function selectProfile(el) {
+  document.querySelectorAll('#profiles .profile-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedProfile = el.dataset.profile;
+}
+
+/* =====================================================
+   LANCER LA RECHERCHE
+   ===================================================== */
+async function lancerRecherche() {
+  const from = document.getElementById('inputFrom').value.trim();
+  const to = document.getElementById('inputTo').value.trim();
+  const date = document.getElementById('inputDate').value;
+  const time = document.getElementById('inputTime').value;
+
+  if (!from || !to) { showNotification('⚠️ Veuillez renseigner un départ et une arrivée.'); return; }
+
+  // Résoudre coords si pas encore sélectionnées via autocomplete
+  if (!state.fromCoords) {
+    const found = ARRETS_LIO.find(a => a.name.toLowerCase().includes(from.toLowerCase()));
+    if (found) { state.fromCoords = { lat: found.lat, lon: found.lon }; state.fromLabel = found.name; }
+    else { state.fromCoords = { lat: 43.3428, lon: 3.2175 }; state.fromLabel = from; }
+  }
+  if (!state.toCoords) {
+    const found = ARRETS_LIO.find(a => a.name.toLowerCase().includes(to.toLowerCase()));
+    if (found) { state.toCoords = { lat: found.lat, lon: found.lon }; state.toLabel = found.name; }
+    else { state.toCoords = { lat: 43.3480, lon: 3.2180 }; state.toLabel = to; }
+  }
+
+  document.getElementById('loading').classList.add('active');
+
+  let journeys = [];
+  try {
+    if (state.apiKey && !state.demoMode) {
+      journeys = await fetchNavitiaJourneys(state.fromCoords, state.toCoords, date, time);
+    }
+    if (!journeys.length) {
+      journeys = generateDemoJourneys(state.fromLabel, state.toLabel, date, time);
+      state.demoMode = true;
+      document.getElementById('dataBadge').textContent = '🎭 Mode démo';
+    }
+  } catch(e) {
+    journeys = generateDemoJourneys(state.fromLabel, state.toLabel, date, time);
+    document.getElementById('dataBadge').textContent = '🎭 Mode démo';
+  }
+
+  // Appliquer filtres profil
+  journeys = applyProfileFilters(journeys, state.selectedProfile);
+  state.currentJourneys = journeys;
+
+  document.getElementById('loading').classList.remove('active');
+  renderResults(journeys, state.fromLabel || from, state.toLabel || to, date, time);
+  showPage('results');
+}
+
+/* =====================================================
+   NAVITIA API — FETCH JOURNEYS
+   ===================================================== */
+async function fetchNavitiaJourneys(from, to, date, time) {
+  const dt = date.replace(/-/g, '') + 'T' + time.replace(':', '') + '00';
+  const url = `https://api.navitia.io/v1/coverage/fr-se/journeys?from=${from.lon};${from.lat}&to=${to.lon};${to.lat}&datetime=${dt}&count=3&min_nb_journeys=1`;
+  const r = await fetch(url, { headers: { Authorization: state.apiKey } });
+  if (!r.ok) throw new Error('Navitia error ' + r.status);
+  const data = await r.json();
+  if (!data.journeys || !data.journeys.length) return [];
+
+  return data.journeys.map(j => parseNavitiaJourney(j));
+}
+
+function parseNavitiaJourney(j) {
+  const durationMin = Math.round(j.duration / 60);
+  const walkSec = j.sections ? j.sections.filter(s => s.type === 'street_network' || s.type === 'transfer').reduce((a, s) => a + (s.duration || 0), 0) : 0;
+  const walkMin = Math.round(walkSec / 60);
+  const transfers = j.nb_transfers || 0;
+  const depTime = j.departure_date_time ? formatNavitiaTime(j.departure_date_time) : '--:--';
+  const arrTime = j.arrival_date_time ? formatNavitiaTime(j.arrival_date_time) : '--:--';
+
+  // Calcul distance approx
+  let distKm = 0;
+  if (j.sections) {
+    j.sections.forEach(s => { if (s.geojson && s.geojson.properties && s.geojson.properties.length) distKm += s.geojson.properties.length / 1000; });
+  }
+  if (!distKm) distKm = durationMin * 0.3; // fallback
+
+  const co2Bus = Math.round(distKm * CO2.bus);
+  const co2Car = Math.round(distKm * CO2.voiture);
+
+  // Sections formatées
+  const sections = [];
+  if (j.sections) {
+    j.sections.forEach(s => {
+      if (s.type === 'waiting') return;
+      const t = formatNavitiaTime(s.departure_date_time);
+      if (s.type === 'public_transport') {
+        const line = s.display_informations?.label || s.display_informations?.network || 'Bus';
+        const dir = s.display_informations?.direction || '';
+        const from_stop = s.from?.stop_point?.name || s.from?.name || '';
+        sections.push({ type: 'bus', time: t, title: `🚌 Ligne ${line}${dir ? ' → ' + dir : ''}`, desc: `Montée à : ${from_stop}`, duration: Math.round((s.duration||0)/60) });
+      } else if (s.type === 'street_network' || s.type === 'transfer') {
+        const mode = s.mode === 'bike' ? '🚴' : '🚶';
+        sections.push({ type: 'walk', time: t, title: `${mode} ${s.mode === 'bike' ? 'Vélo' : 'Marche'}`, desc: `${Math.round((s.duration||0)/60)} min`, duration: Math.round((s.duration||0)/60) });
+      } else if (s.type === 'crow_fly') {
+        sections.push({ type: 'walk', time: t, title: '🚶 Marche', desc: `${Math.round((s.duration||0)/60)} min`, duration: Math.round((s.duration||0)/60) });
+      }
+    });
+  }
+
+  // Coordonnées pour la carte
+  const coords = [];
+  if (j.sections) {
+    j.sections.forEach(s => {
+      if (s.geojson && s.geojson.coordinates) {
+        s.geojson.coordinates.forEach(c => {
+          if (Array.isArray(c) && c.length >= 2 && typeof c[0] === 'number') coords.push([c[1], c[0]]);
+        });
+      }
+    });
+  }
+
+  return { durationMin, walkMin, transfers, depTime, arrTime, distKm: Math.round(distKm*10)/10, co2Bus, co2Car, sections, coords, source: 'navitia', type: j.type || 'fastest' };
+}
+
+function formatNavitiaTime(dt) {
+  if (!dt) return '--:--';
+  const s = dt.toString();
+  if (s.includes('T')) {
+    const parts = s.split('T')[1];
+    return parts.slice(0,2) + ':' + parts.slice(2,4);
+  }
+  return s.slice(9,11) + ':' + s.slice(11,13);
+}
+
+/* =====================================================
+   MODE DÉMO — GÉNÉRATION RÉALISTE
+   ===================================================== */
+function generateDemoJourneys(from, to, date, time) {
+  const [h, m] = time.split(':').map(Number);
+  const depMin = h * 60 + m;
+
+  // Calcul distance approx entre coords
+  let distKm = 5;
+  if (state.fromCoords && state.toCoords) {
+    const dlat = state.toCoords.lat - state.fromCoords.lat;
+    const dlon = state.toCoords.lon - state.fromCoords.lon;
+    distKm = Math.round(Math.sqrt(dlat*dlat + dlon*dlon) * 111 * 10) / 10;
+    if (!distKm) distKm = 5;
+  }
+
+  const busTime = Math.max(8, Math.round(distKm * 4));
+  const arrMin1 = depMin + busTime + 10;
+  const arrMin2 = depMin + busTime + 6;
+  const arrMin3 = depMin + busTime + 18;
+
+  function minToTime(min) { return `${String(Math.floor(min/60)%24).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`; }
+
+  const co2Bus = Math.round(distKm * CO2.bus / 1000 * 10) / 10;
+  const co2Car = Math.round(distKm * CO2.voiture / 1000 * 10) / 10;
+
+  // Génération des coords polyline pour carte
+  function genCoords(startLat, startLon, endLat, endLon, steps=8) {
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i/steps;
+      const jitter = (Math.random()-0.5)*0.002;
+      pts.push([startLat + (endLat-startLat)*t + jitter, startLon + (endLon-startLon)*t + jitter]);
+    }
+    return pts;
+  }
+
+  const startLat = state.fromCoords?.lat || 43.3428;
+  const startLon = state.fromCoords?.lon || 3.2175;
+  const endLat = state.toCoords?.lat || 43.3480;
+  const endLon = state.toCoords?.lon || 3.2180;
+
+  return [
+    {
+      durationMin: busTime + 10,
+      walkMin: 8,
+      transfers: 1,
+      depTime: time,
+      arrTime: minToTime(arrMin1),
+      distKm,
+      co2Bus,
+      co2Car,
+      type: 'recommended',
+      source: 'demo',
+      sections: [
+        { type: 'walk', time: time, title: '🚶 Marche jusqu\'à l\'arrêt', desc: `4 min à pied`, duration: 4 },
+        { type: 'bus', time: minToTime(depMin+4), title: `🚌 Bus Ligne 3 — Direction Centre-ville`, desc: `${busTime} min · Départ de l'arrêt départ`, duration: busTime },
+        { type: 'transfer', time: minToTime(depMin+4+busTime), title: '🔄 Correspondance', desc: `Ligne 7 dans 3 min`, duration: 3 },
+        { type: 'walk', time: minToTime(depMin+4+busTime+3), title: '🚶 Marche jusqu\'à la destination', desc: '4 min à pied', duration: 4 },
+        { type: 'end', time: minToTime(arrMin1), title: `📍 Arrivée — ${to}`, desc: 'Destination atteinte', duration: 0 }
+      ],
+      coords: genCoords(startLat, startLon, endLat, endLon)
+    },
+    {
+      durationMin: busTime + 6,
+      walkMin: 2,
+      transfers: 2,
+      depTime: time,
+      arrTime: minToTime(arrMin2),
+      distKm,
+      co2Bus: co2Bus * 0.9,
+      co2Car,
+      type: 'fast',
+      source: 'demo',
+      sections: [
+        { type: 'walk', time: time, title: '🚶 Marche rapide', desc: '2 min', duration: 2 },
+        { type: 'bus', time: minToTime(depMin+2), title: `🚌 Bus Ligne 5 Direct`, desc: `${busTime-2} min sans arrêt intermédiaire`, duration: busTime-2 },
+        { type: 'walk', time: minToTime(depMin+2+busTime-2), title: '🚶 Marche finale', desc: '2 min', duration: 2 },
+        { type: 'end', time: minToTime(arrMin2), title: `📍 Arrivée — ${to}`, desc: 'Destination atteinte', duration: 0 }
+      ],
+      coords: genCoords(startLat, startLon, endLat, endLon, 6)
+    },
+    {
+      durationMin: busTime + 18,
+      walkMin: 14,
+      transfers: 0,
+      depTime: time,
+      arrTime: minToTime(arrMin3),
+      distKm: distKm * 1.1,
+      co2Bus: co2Bus * 0.7,
+      co2Car,
+      type: 'eco',
+      source: 'demo',
+      sections: [
+        { type: 'walk', time: time, title: '🚴 Vélo / Marche active', desc: '8 min', duration: 8 },
+        { type: 'bus', time: minToTime(depMin+8), title: `🚌 Bus Ligne 1 Direct`, desc: `${busTime+4} min · Ligne directe sans correspondance`, duration: busTime+4 },
+        { type: 'walk', time: minToTime(depMin+8+busTime+4), title: '🚶 Marche finale', desc: '6 min', duration: 6 },
+        { type: 'end', time: minToTime(arrMin3), title: `📍 Arrivée — ${to}`, desc: 'Destination atteinte', duration: 0 }
+      ],
+      coords: genCoords(startLat, startLon, endLat, endLon, 12)
+    }
+  ];
+}
+
+/* =====================================================
+   FILTRES PROFIL
+   ===================================================== */
+function applyProfileFilters(journeys, profile) {
+  switch(profile) {
+    case 'pmr':
+      return journeys.sort((a,b) => a.walkMin - b.walkMin);
+    case 'eco':
+      return journeys.sort((a,b) => a.co2Bus - b.co2Bus);
+    case 'etudiant':
+      return journeys.sort((a,b) => a.durationMin - b.durationMin);
+    case 'senior':
+      return journeys.sort((a,b) => a.transfers - b.transfers);
+    default:
+      return journeys;
+  }
+}
+
+/* =====================================================
+   RENDU RÉSULTATS
+   ===================================================== */
+function renderResults(journeys, from, to, date, time) {
+  const dateFormatted = new Date(date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('resultsRoute').textContent = `${from} → ${to} · ${dateFormatted} · ${time}`;
+
+  if (!journeys.length) {
+    document.getElementById('resultsContent').innerHTML = `
+      <div class="no-result">
+        <div class="no-icon">🔍</div>
+        <h2>Aucun itinéraire trouvé</h2>
+        <p>Essayez de modifier votre départ, arrivée ou horaire.</p>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="showPage('search')">← Modifier la recherche</button>
+      </div>`;
+    return;
+  }
+
+  const main = journeys[0];
+  const alts = journeys.slice(1);
+
+  const timelineHTML = main.sections.map((s, i) => {
+    const dotClass = s.type === 'walk' || s.type === 'transfer' ? 'walk' : s.type === 'end' ? 'end' : '';
+    const isLast = i === main.sections.length - 1;
+    return `<div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-dot ${dotClass}"></div>
+        ${!isLast ? '<div class="tl-line"></div>' : ''}
+      </div>
+      <div class="tl-content">
+        <h4>${s.title}</h4>
+        <p>${s.desc}</p>
+        <span class="tl-time">${s.time}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const altsHTML = alts.map(j => {
+    const tagMap = { fast: ['⚡ Option rapide', 'tag-fast', `+${j.durationMin - main.durationMin} min`], eco: ['🌿 Option écologique', 'tag-eco', `−${(main.co2Bus - j.co2Bus).toFixed(2)} kg CO₂`], recommended: ['♿ Option accessible', 'tag-acc', 'PMR'] };
+    const [label, cls, badge] = tagMap[j.type] || ['🔀 Alternative', 'tag-fast', ''];
+    return `<div class="alt-card" onclick="loadAltJourney(${alts.indexOf(j)+1})">
+      <div class="alt-card-header"><h4>${label}</h4><span class="alt-tag ${cls}">${badge}</span></div>
+      <div class="alt-stats"><span>🕐 ${j.durationMin} min</span><span>🚶 ${j.walkMin} min</span><span>🔄 ${j.transfers} corresp.</span></div>
+    </div>`;
+  }).join('');
+
+  const co2Saved = (main.co2Car - main.co2Bus).toFixed(2);
+  const ecoLabel = co2Saved > 1 ? '🌱 Impact très faible' : '🟡 Impact modéré';
+
+  document.getElementById('resultsContent').innerHTML = `
+    <div class="results-grid">
+      <div>
+        <div class="main-result">
+          <div class="result-badge">⭐ Trajet recommandé${main.source === 'demo' ? ' · Simulation' : ' · Données réelles'}</div>
+          <div class="result-stats">
+            <div class="stat-block"><div class="stat-val">${main.durationMin} min</div><div class="stat-label">Durée totale</div></div>
+            <div class="stat-block"><div class="stat-val">${main.arrTime}</div><div class="stat-label">Arrivée</div></div>
+            <div class="stat-block"><div class="stat-val">${main.walkMin} min</div><div class="stat-label">Marche</div></div>
+            <div class="stat-block"><div class="stat-val">${main.transfers}</div><div class="stat-label">Correspondance(s)</div></div>
+          </div>
+          <div class="timeline">${timelineHTML}</div>
+          <div class="result-actions">
+            <button class="btn btn-primary btn-sm" onclick="showPage('map')">🗺️ Voir sur la carte</button>
+            <button class="btn btn-secondary btn-sm" onclick="printJourney()">🖨️ Imprimer</button>
+            <button class="btn btn-secondary btn-sm" onclick="speakJourney()">🔊 Écouter</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('search')">🔍 Nouveau trajet</button>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-results">
+        <div class="why-box">
+          <h3>Pourquoi ce trajet ?</h3>
+          <div class="why-item">Itinéraire optimisé selon votre profil "${state.selectedProfile}"</div>
+          <div class="why-item">Distance totale : ${main.distKm} km</div>
+          <div class="why-item">${Math.round(main.co2Car / main.co2Bus)}× moins polluant que la voiture</div>
+          ${main.source === 'navitia' ? '<div class="why-item">Données temps réel liO Occitanie</div>' : '<div class="why-item">Simulation réaliste réseau liO</div>'}
+        </div>
+        <div class="eco-box">
+          <h3>🌿 Score écologique</h3>
+          <div class="eco-compare">
+            <div class="eco-col"><div class="eco-val green">${main.co2Bus.toFixed(2)} kg</div><p>CO₂ — Bus</p></div>
+            <div class="eco-divider">vs</div>
+            <div class="eco-col"><div class="eco-val red">${main.co2Car.toFixed(2)} kg</div><p>CO₂ — Voiture</p></div>
+          </div>
+          <div class="eco-saved">✅ Vous économisez ${co2Saved} kg CO₂ — ${ecoLabel}</div>
+        </div>
+        ${alts.length ? `<div><p class="alt-title">Alternatives</p><div class="alt-cards">${altsHTML}</div></div>` : ''}
+      </div>
+    </div>`;
+}
+
+function loadAltJourney(idx) {
+  const copy = [...state.currentJourneys];
+  const alt = copy.splice(idx, 1)[0];
+  copy.unshift(alt);
+  state.currentJourneys = copy;
+  const from = document.getElementById('inputFrom')?.value || state.fromLabel;
+  const to = document.getElementById('inputTo')?.value || state.toLabel;
+  const date = document.getElementById('inputDate')?.value || new Date().toISOString().split('T')[0];
+  const time = document.getElementById('inputTime')?.value || '08:00';
+  renderResults(copy, from, to, date, time);
+  window.scrollTo(0,0);
+}
+
+function printJourney() { window.print(); }
+
+function speakJourney() {
+  if (!('speechSynthesis' in window)) { showNotification('❌ Synthèse vocale non disponible sur ce navigateur.'); return; }
+  window.speechSynthesis.cancel();
+  const j = state.currentJourneys[0];
+  if (!j) return;
+  let text = `Votre itinéraire de ${state.fromLabel} à ${state.toLabel}. Durée totale : ${j.durationMin} minutes. `;
+  j.sections.forEach(s => { text += s.title.replace(/[🚌🚶🔄📍🚴]/g, '') + '. '; });
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'fr-FR';
+  window.speechSynthesis.speak(utt);
+  showNotification('🔊 Lecture vocale en cours…');
+}
+
+/* =====================================================
+   CARTE LEAFLET
+   ===================================================== */
+function initMap() {
+  if (state.map) {
+    state.map.invalidateSize();
+    if (state.currentJourneys.length) drawJourneyOnMap(state.currentJourneys[0]);
+    return;
+  }
+
+  const centerLat = state.fromCoords?.lat || 43.3428;
+  const centerLon = state.fromCoords?.lon || 3.2175;
+
+  state.map = L.map('leaflet-map').setView([centerLat, centerLon], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(state.map);
+
+  if (state.currentJourneys.length) {
+    drawJourneyOnMap(state.currentJourneys[0]);
+  } else {
+    // Afficher juste Béziers/Montpellier par défaut
+    L.marker([43.3428, 3.2175]).addTo(state.map).bindPopup('<b>Gare de Béziers</b><br>Départ exemple').openPopup();
+  }
+}
+
+function drawJourneyOnMap(journey) {
+  if (!state.map) return;
+
+  // Nettoyer les anciennes couches
+  state.mapLayers.bus.forEach(l => state.map.removeLayer(l));
+  state.mapLayers.walk.forEach(l => state.map.removeLayer(l));
+  state.mapLayers.markers.forEach(l => state.map.removeLayer(l));
+  state.mapLayers = { bus: [], walk: [], markers: [] };
+
+  const from = state.fromCoords;
+  const to = state.toCoords;
+
+  if (!from || !to) return;
+
+  // Polyline du trajet
+  if (journey.coords && journey.coords.length > 1) {
+    const poly = L.polyline(journey.coords, { color: '#1db37e', weight: 5, opacity: 0.85, smoothFactor: 1 }).addTo(state.map);
+    state.mapLayers.bus.push(poly);
+    state.map.fitBounds(poly.getBounds(), { padding: [40, 40] });
+  }
+
+  // Marqueur départ
+  const iconFrom = L.divIcon({
+    html: `<div style="background:#1db37e;color:white;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3)"><span style="transform:rotate(45deg);font-size:14px">📍</span></div>`,
+    className: '', iconSize: [32, 32], iconAnchor: [16, 32]
+  });
+  const mFrom = L.marker([from.lat, from.lon], { icon: iconFrom }).addTo(state.map)
+    .bindPopup(`<b>Départ</b><br>${state.fromLabel}`);
+  state.mapLayers.markers.push(mFrom);
+
+  // Marqueur arrivée
+  const iconTo = L.divIcon({
+    html: `<div style="background:#0d1f1a;color:white;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3)"><span style="transform:rotate(45deg);font-size:14px">🏁</span></div>`,
+    className: '', iconSize: [32, 32], iconAnchor: [16, 32]
+  });
+  const mTo = L.marker([to.lat, to.lon], { icon: iconTo }).addTo(state.map)
+    .bindPopup(`<b>Arrivée</b><br>${state.toLabel}`);
+  state.mapLayers.markers.push(mTo);
+
+  // Arrêts intermédiaires
+  if (journey.sections) {
+    journey.sections.forEach((s, i) => {
+      if (s.type === 'transfer' && i > 0 && i < journey.sections.length - 1) {
+        const t = journey.coords ? journey.coords[Math.floor(journey.coords.length * i / journey.sections.length)] : null;
+        if (t) {
+          const stopIcon = L.circleMarker(t, { radius: 7, color: '#f0a500', fillColor: '#f0a500', fillOpacity: 1, weight: 2 }).addTo(state.map);
+          stopIcon.bindPopup(`<b>${s.title.replace(/[🔄🚌🚶📍]/g, '')}</b><br>${s.time}`);
+          state.mapLayers.walk.push(stopIcon);
+        }
+      }
+    });
+  }
+
+  // Mise à jour sidebar carte
+  updateMapSidebar(journey);
+}
+
+function updateMapSidebar(journey) {
+  const info = document.getElementById('mapTrajetInfo');
+  if (!info) return;
+  document.getElementById('mapSubtitle').textContent = `${state.fromLabel} → ${state.toLabel}`;
+  info.innerHTML = `
+    <div class="map-info-item"><div class="map-dot" style="background:var(--green)"></div> <strong>${state.fromLabel}</strong></div>
+    ${journey.sections.filter(s => s.type === 'bus').map(s => `<div class="map-info-item"><div class="map-dot" style="background:#5b8fff"></div> ${s.title.replace('🚌 ','').substring(0,30)}… (${s.duration} min)</div>`).join('')}
+    <div class="map-info-item"><div class="map-dot" style="background:var(--ink)"></div> <strong>${state.toLabel}</strong></div>
+  `;
+}
+
+function applyMapFilters() {
+  const showArrets = document.getElementById('filterArrets').checked;
+  const showLignes = document.getElementById('filterLignes').checked;
+  const showMarche = document.getElementById('filterMarche').checked;
+  state.mapLayers.bus.forEach(l => showLignes ? state.map.addLayer(l) : state.map.removeLayer(l));
+  state.mapLayers.walk.forEach(l => showMarche ? state.map.addLayer(l) : state.map.removeLayer(l));
+  state.mapLayers.markers.forEach(l => showArrets ? state.map.addLayer(l) : state.map.removeLayer(l));
+}
+
+/* =====================================================
+   ACCESSIBILITÉ
+   ===================================================== */
+function toggleAccess(type, el) {
+  el.classList.toggle('on');
+  if (type === 'largeText') document.body.classList.toggle('large-text', el.classList.contains('on'));
+  if (type === 'contrast') document.body.classList.toggle('high-contrast', el.classList.contains('on'));
+}
+
+function toggleVoice(el) {
+  el.classList.toggle('on');
+  if (el.classList.contains('on')) {
+    showNotification('🔊 Lecture vocale activée. Elle sera utilisée lors de l\'affichage des résultats.');
+  } else {
+    window.speechSynthesis && window.speechSynthesis.cancel();
+  }
+}
+
+function toggleLang(el) {
+  el.classList.toggle('on');
+  const isEN = el.classList.contains('on');
+  showNotification(isEN ? '🌍 Language switched to English (partial support).' : '🌍 Interface en français restaurée.');
+}
+</script>
+</body>
+</html>
