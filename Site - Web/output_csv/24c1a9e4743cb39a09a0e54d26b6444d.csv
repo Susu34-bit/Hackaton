@@ -1,0 +1,25 @@
+fare_product_id,fare_product_name,amount,currency,fare_media_id,rider_category_id
+product:lio66:ABO:A,Abonnement annuel liO66,300.00,EUR,media:lio:csc:lio,rider::TP
+product:lio66:ABO:A,Abonnement annuel jeunes liO66,120.00,EUR,media:lio:csc:lio,rider:lio:J26
+product:lio66:ABO:M,Abonnement mensuel liO66,36.00,EUR,media:lio:csc:lio,rider::TP
+product:lio:ABO:A,Abonnement annuel,420.00,EUR,media:lio:app:mticket,rider::TP
+product:lio:ABO:A,Abonnement annuel,420.00,EUR,media:lio:csc:lio,rider::TP
+product:lio:ABO:A,Abonnement annuel,420.00,EUR,media:lio:csc:pastel,rider::TP
+product:lio:ABO:A,Abonnement annuel jeunes,195.00,EUR,media:lio:app:mticket,rider:lio:J26
+product:lio:ABO:A,Abonnement annuel jeunes,195.00,EUR,media:lio:csc:lio,rider:lio:J26
+product:lio:ABO:A,Abonnement annuel jeunes,195.00,EUR,media:lio:csc:pastel,rider:lio:J26
+product:lio:ABO:M,Abonnement mensuel,44.00,EUR,media:lio:app:mticket,rider::TP
+product:lio:ABO:M,Abonnement mensuel,44.00,EUR,media:lio:csc:lio,rider::TP
+product:lio:ABO:M,Abonnement mensuel,44.00,EUR,media:lio:csc:pastel,rider::TP
+product:lio:ABO:M,Abonnement mensuel jeunes,20.00,EUR,media:lio:app:mticket,rider:lio:J26
+product:lio:ABO:M,Abonnement mensuel jeunes,20.00,EUR,media:lio:csc:lio,rider:lio:J26
+product:lio:ABO:M,Abonnement mensuel jeunes,20.00,EUR,media:lio:csc:pastel,rider:lio:J26
+product:lio:C10,Carnet de 10,15.00,EUR,media::phy,rider::TP
+product:lio:C10,Carnet de 10,15.00,EUR,media:lio:app:mticket,rider::TP
+product:lio:C10,Carnet de 10,15.00,EUR,media:lio:bsc:lio,rider::TP
+product:lio:C10,Carnet de 10,15.00,EUR,media:lio:csc:lio,rider::TP
+product:lio:TU,Ticket unitaire,2.00,EUR,media::phy,rider::TP
+product:lio:TU,Ticket unitaire,2.00,EUR,media:lio:app:mticket,rider::TP
+product:lio:TU,Ticket unitaire,2.00,EUR,media:lio:cemv,rider::TP
+product:lio:TU,Ticket unitaire,2.00,EUR,media:lio:csc:lio,rider::TP
+product:lio:TU,Ticket unitaire,0.00,EUR,media:lio:cnt,rider:lio:J4

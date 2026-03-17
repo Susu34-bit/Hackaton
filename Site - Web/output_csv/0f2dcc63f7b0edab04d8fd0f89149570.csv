@@ -1,0 +1,15 @@
+leg_group_id,network_id,from_area_id,to_area_id,from_timeframe_group_id,to_timeframe_group_id,fare_product_id,rule_priority
+leg:lio:lr,FR-OCC:924:0100,,,,,product:lio:ABO:A,2
+leg:lio:lr,FR-OCC:924:0100,,,,,product:lio:ABO:M,2
+leg:lio:lr,FR-OCC:924:0100,,,,,product:lio:C10,2
+leg:lio:lr,FR-OCC:924:0100,,,,,product:lio:TU,2
+leg:lio:lr:34,FR-OCC:924:0134,,,,,product:lio:ABO:A,2
+leg:lio:lr:34,FR-OCC:924:0134,,,,,product:lio:ABO:M,2
+leg:lio:lr:34,FR-OCC:924:0134,,,,,product:lio:C10,2
+leg:lio:lr:34,FR-OCC:924:0134,,,,,product:lio:TU,2
+leg:lio:lr:66,FR-OCC:924:0166,,,,,product:lio66:ABO:A,1
+leg:lio:lr:66,FR-OCC:924:0166,,,,,product:lio66:ABO:M,1
+leg:lio:lr,FR-OCC:924:0166,,,,,product:lio:ABO:A,2
+leg:lio:lr,FR-OCC:924:0166,,,,,product:lio:ABO:M,2
+leg:lio:lr,FR-OCC:924:0166,,,,,product:lio:C10,2
+leg:lio:lr,FR-OCC:924:0166,,,,,product:lio:TU,2
